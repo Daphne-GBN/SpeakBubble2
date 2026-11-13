@@ -139,6 +139,102 @@ The Express backend currently exposes routes for:
 
 Protected API routes require the session token in the `Authorization: Bearer <token>` header. The SSE endpoint receives the token as a query parameter because the browser's `EventSource` API does not support custom authorization headers.
 
+### Testing with Postman
+
+You can test the REST API independently of the React interface using [Postman](https://www.postman.com/).
+
+**Base URL**
+
+```text
+http://localhost:5000
+```
+
+Start the backend before sending requests:
+
+```bash
+node server.js
+```
+
+#### 1. Log in and obtain a token
+
+- **Method:** `POST`
+- **URL:** `http://localhost:5000/api/login`
+- **Body:** Select **raw** and **JSON** in Postman.
+
+```json
+{
+  "username": "Daphne",
+  "password": "daphne123"
+}
+```
+
+A successful response contains a `token`. Copy its value for the authenticated requests below.
+
+#### 2. Set authentication for protected endpoints
+
+In the Postman **Headers** tab, add:
+
+| Key | Value |
+|---|---|
+| `Authorization` | `Bearer YOUR_TOKEN` |
+| `Content-Type` | `application/json` |
+
+Replace `YOUR_TOKEN` with the token returned by the login request. The login endpoint itself does not require this header.
+
+#### 3. Send a group message
+
+- **Method:** `POST`
+- **URL:** `http://localhost:5000/api/rooms/1/messages`
+- **Body:** raw → JSON
+
+```json
+{
+  "text": "Hello from Postman!"
+}
+```
+
+Room ID `1` is the General room; room ID `2` is Developers.
+
+#### 4. Retrieve group messages
+
+- **Method:** `GET`
+- **URL:** `http://localhost:5000/api/rooms/1/messages`
+
+Use the same authentication header.
+
+#### 5. Send a private message
+
+- **Method:** `POST`
+- **URL:** `http://localhost:5000/api/dm/2/messages`
+- **Body:** raw → JSON
+
+```json
+{
+  "text": "Hey Alex! This is a private message."
+}
+```
+
+The example sends a message to user ID `2` (Alex) when authenticated as Daphne.
+
+#### 6. Retrieve a private conversation
+
+- **Method:** `GET`
+- **URL:** `http://localhost:5000/api/dm/2/messages`
+
+Use the same authentication header.
+
+#### 7. Check validation
+
+To test the empty-message validation, send a group or private message with this body:
+
+```json
+{
+  "text": ""
+}
+```
+
+The API should respond with `400 Bad Request` and an explanatory error message. Messages longer than 1000 characters are also rejected.
+
 ## Notes and Limitations
 
 - The current setup is intended for local development and demonstration.
